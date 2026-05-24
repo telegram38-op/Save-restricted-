@@ -1,6 +1,5 @@
 import os
 import asyncio
-import nest_asyncio  # Agar yeh require ho, toh normal loop fix niche hai
 
 # --- PYTHON 3.11+ EVENT LOOP PATCH ---
 # Pyrogram import hone se pehle loop set karna zaroori hai
