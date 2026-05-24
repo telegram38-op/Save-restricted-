@@ -126,7 +126,9 @@ async def main():
     print("🤖 Bulk Restricted Bot Online!")
     await asyncio.get_event_loop().create_future()
 
+# ✅ YEH WALA CODE DAALEIN (Naya Coroutine Code)
 if __name__ == "__main__":
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(main())
-
+    try:
+        asyncio.run(main())
+    except KeyboardInterrupt:
+        print("Bot stopped manually.")
