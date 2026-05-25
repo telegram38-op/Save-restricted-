@@ -30,7 +30,6 @@ API_ID = 32156800
 API_HASH = "73fbf3673dd59fd129a9937ca11c00d2"
 BOT_TOKEN = "8920256142:AAFSmSbEr64A-Pyr_iEAreah_Whd3r9OI9M"
 STRING_SESSION = "BQHqrIAAAuk1Fe5vh8Po6simtUnWpzeWfq4slr8Z8qpHIWYJ2UYursoiGMFNZpKd4In18wOYnAQ2PiU2LD9wssxdXlq3HPnze4bohCSXvUR1X7a-l6Im1CYrDVLqLxgPfzS5Mp3i73DXIqo917N9EYdn4l9GkfGM4twHz4Wdv3ShJirABf73nlxpVfD8eDc7logD0eE9RHDOiX_BXKE_mXib-F9TCHGRdu9G8zrvDKr748PGocaXBFr184J1S-ByX5eNbbtU1Mcux8-ffxqlb_DUKg7SqZj904uAOZ77tr2ie2RKFAsepTKEGWFFBUE3C3abqOmUALUdXt3w2RGqyoIU4t9aIAAAAAHMLobqAA"
-
 bot = Client("restricted_bot", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN)
 user = Client("user_session", api_id=API_ID, api_hash=API_HASH, session_string=STRING_SESSION)
 
@@ -67,48 +66,46 @@ async def bulk_clone(client, message):
     except ValueError:
         pass
 
-    status = await message.reply_text("🔄 **Bulk Forwarding Shuru... Channels connect ho rahe hain...**")
+    status = await message.reply_text("🔄 **Peer sync ho raha hai... Khwabon ki cloning jaari hai...**")
     IS_PROCESSING = True
     success_count = 0
 
     try:
-        # Step 1: Saari chat history ko fetch karna safely
+        # FIXED: Peer ID Invalid se bachne ke liye pehle chat ko force-resolve karenge
+        try:
+            await user.get_chat(source_chat)
+        except Exception as pe:
+            print(f"Peer resolve debug: {pe}")
+
         messages_list = []
         async for msg in user.get_chat_history(source_chat):
-            if msg.service: # Service messages (like pinned logs) hatao
+            if msg.service:
                 continue
             messages_list.append(msg)
         
-        # Step 2: Sabse purani post (EP-1) se shuru karne ke liye list ko ulti directional reverse karna
         messages_list.reverse()
 
         if not messages_list:
-            await status.edit("❌ Source channel mein koi bhi valid message nahi mila ya account joined nahi hai.")
+            await status.edit("❌ Source channel khali mila ya userbot access nahi kar pa raha.")
             IS_PROCESSING = False
             return
 
-        await status.edit(f"📦 Total **{len(messages_list)}** posts mili hain. Forwarding shuru ho rahi hai...")
+        await status.edit(f"📦 Total **{len(messages_list)}** posts mili hain. Forwarding shuru...")
 
-        # Step 3: Main Forwarding Loop
         for msg in messages_list:
             if not IS_PROCESSING:
                 break
 
             try:
-                # Text Messages handle karne ke liye
                 if msg.text:
                     await bot.send_message(chat_id=target_chat, text=msg.text, entities=msg.entities)
                     success_count += 1
-                
-                # Media files (Audio, Video, Photo, Docs) handle karne ke liye
                 elif msg.media:
-                    # Direct userbot stream se ya local temp folder mein download karna
                     file_path = await user.download_media(msg)
                     if file_path:
                         caption = msg.caption if msg.caption else ""
                         caption_entities = msg.caption_entities if msg.caption_entities else None
 
-                        # Har restricted file ko bot naye sire se naye server par post karega
                         await bot.send_document(
                             chat_id=target_chat,
                             document=file_path,
@@ -116,24 +113,20 @@ async def bulk_clone(client, message):
                             caption_entities=caption_entities
                         )
                         success_count += 1
-                        
-                        # Storage bharne se bachane ke liye download ki gayi file delete karna
                         if os.path.exists(file_path):
                             os.remove(file_path)
 
-                # Har post forward hote hi chat screen par instantaneous status update
-                await status.edit(f"▓ Progress: **{success_count}** posts forward ho chuki hain...")
+                if success_count % 2 == 0 or success_count == len(messages_list):
+                    await status.edit(f"▓ Progress: **{success_count}** posts forward ho chuki hain...")
                 
-                # Telegram flood protection ke liye short 2-second gap
                 await asyncio.sleep(2) 
 
             except FloodWait as e:
                 await asyncio.sleep(e.value)
             except Exception as e:
-                # Agar kisi ek post mein error aaye toh poora bot crash na ho, aage badhta rahe
                 continue
 
-        await status.edit(f"✅ **Bulk Forwarding Complete!** Total: {success_count} posts cloned successfully.")
+        await status.edit(f"✅ **Bulk Forwarding Complete!** Total: {success_count} posts.")
     except Exception as e:
         await status.edit(f"❌ **Error:** {str(e)}")
     finally:
@@ -151,4 +144,3 @@ if __name__ == "__main__":
         loop.run_until_complete(main())
     except KeyboardInterrupt:
         print("Bot stopped.")
-
