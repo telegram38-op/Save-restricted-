@@ -1,8 +1,24 @@
 import os
 import asyncio
+from flask import Flask
+from threading import Thread
 
-# --- PYTHON 3.11+ EVENT LOOP PATCH ---
-# Pyrogram import hone se pehle loop set karna zaroori hai
+# --- FAKE WEB SERVER FOR RENDER BYPASS ---
+app = Flask(__name__)
+
+@app.route('/')
+def home():
+    return "Bot is Running 24/7!"
+
+def run_web():
+    # Render hamesha port 10000 ya environment variable PORT deta hai
+    port = int(os.environ.get("PORT", 10000))
+    app.run(host="0.0.0.0", port=port)
+
+# Background thread me web server shuru karna
+Thread(target=run_web).start()
+
+# --- CODES FOR EVENT LOOP PATCH ---
 try:
     loop = asyncio.get_event_loop()
 except RuntimeError:
@@ -13,10 +29,10 @@ from pyrogram import Client, filters
 from pyrogram.errors import FloodWait
 
 # --- CONFIGURATION ---
-API_ID = int(os.environ.get("API_ID", 12345))
-API_HASH = os.environ.get("API_HASH", "your_api_hash_here")
-BOT_TOKEN = os.environ.get("BOT_TOKEN", "your_bot_token_here")
-STRING_SESSION = os.environ.get("STRING_SESSION", "your_pyrogram_string_session_here")
+API_ID = 32156800
+API_HASH = "73fbf3673dd59fd129a9937ca11c00d2"
+BOT_TOKEN = "8920256142:AAFSmSbEr64A-Pyr_iEAreah_Whd3r9OI9M"
+STRING_SESSION = "your_new_string_session_here" # <-- Apna naya wala valid string session yahan daalna
 
 bot = Client("restricted_bot", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN)
 user = Client("user_session", api_id=API_ID, api_hash=API_HASH, session_string=STRING_SESSION)
@@ -100,16 +116,14 @@ async def bulk_clone(client, message):
     finally:
         IS_PROCESSING = False
 
-# --- RUNNING THE BOT USING NESTED/EXISTING LOOP ---
 async def main():
     await user.start()
     await bot.start()
-    print("🤖 Bulk Restricted Bot Online!")
+    print("🤖 Bulk Restricted Bot Online With Web-Bypass!")
     while True:
         await asyncio.sleep(3600)
 
 if __name__ == "__main__":
-    # Python 3.11+ ke liye explicit loop runner
     try:
         loop.run_until_complete(main())
     except KeyboardInterrupt:
