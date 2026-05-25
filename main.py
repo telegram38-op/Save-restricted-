@@ -73,12 +73,19 @@ async def bulk_clone(client, message):
     success_count = 0
 
     try:
-        # FIXED: Yahan se 'async with user:' hata diya hai kyunki client pehle se connected hai
-        async for msg in user.get_chat_history(source_chat, reverse=True):
-            if not IS_PROCESSING:
-                break
+        # FIXED: Pyrogram V2 me reverse=True nahi chalta, isliye messages ko pehle list me lekar reverse karenge
+        messages_list = []
+        async for msg in user.get_chat_history(source_chat):
             if msg.empty:
                 continue
+            messages_list.append(msg)
+        
+        # Purani posts pehle forward karne ke liye list ko ulti directional loop me chalayein
+        messages_list.reverse()
+
+        for msg in messages_list:
+            if not IS_PROCESSING:
+                break
 
             try:
                 if msg.text:
@@ -99,7 +106,6 @@ async def bulk_clone(client, message):
                     if os.path.exists(file_path):
                         os.remove(file_path)
 
-                # Har 5 message ke baad update dikhane ke liye taaki spam na ho
                 if success_count % 5 == 0:
                     await status.edit(f"▓ Progress: **{success_count}** posts forward ho chuki hain...")
                 
