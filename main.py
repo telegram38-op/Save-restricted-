@@ -32,7 +32,7 @@ from pyrogram.errors import FloodWait
 API_ID = 32156800
 API_HASH = "73fbf3673dd59fd129a9937ca11c00d2"
 BOT_TOKEN = "8920256142:AAFSmSbEr64A-Pyr_iEAreah_Whd3r9OI9M"
-STRING_SESSION = "your_new_string_session_here" # <-- Apna naya wala valid string session yahan daalna
+STRING_SESSION = "BQHqrIAAAuk1Fe5vh8Po6simtUnWpzeWfq4slr8Z8qpHIWYJ2UYursoiGMFNZpKd4In18wOYnAQ2PiU2LD9wssxdXlq3HPnze4bohCSXvUR1X7a-l6Im1CYrDVLqLxgPfzS5Mp3i73DXIqo917N9EYdn4l9GkfGM4twHz4Wdv3ShJirABf73nlxpVfD8eDc7logD0eE9RHDOiX_BXKE_mXib-F9TCHGRdu9G8zrvDKr748PGocaXBFr184J1S-ByX5eNbbtU1Mcux8-ffxqlb_DUKg7SqZj904uAOZ77tr2ie2RKFAsepTKEGWFFBUE3C3abqOmUALUdXt3w2RGqyoIU4t9aIAAAAAHMLobqAA" # <-- Apna naya wala valid string session yahan daalna
 
 bot = Client("restricted_bot", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN)
 user = Client("user_session", api_id=API_ID, api_hash=API_HASH, session_string=STRING_SESSION)
