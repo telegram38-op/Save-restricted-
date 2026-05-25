@@ -11,7 +11,6 @@ def home():
     return "Bot is Running 24/7!"
 
 def run_web():
-    # Render hamesha port 10000 ya environment variable PORT deta hai
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
 
@@ -32,7 +31,7 @@ from pyrogram.errors import FloodWait
 API_ID = 32156800
 API_HASH = "73fbf3673dd59fd129a9937ca11c00d2"
 BOT_TOKEN = "8920256142:AAFSmSbEr64A-Pyr_iEAreah_Whd3r9OI9M"
-STRING_SESSION = "BQHqrIAAAuk1Fe5vh8Po6simtUnWpzeWfq4slr8Z8qpHIWYJ2UYursoiGMFNZpKd4In18wOYnAQ2PiU2LD9wssxdXlq3HPnze4bohCSXvUR1X7a-l6Im1CYrDVLqLxgPfzS5Mp3i73DXIqo917N9EYdn4l9GkfGM4twHz4Wdv3ShJirABf73nlxpVfD8eDc7logD0eE9RHDOiX_BXKE_mXib-F9TCHGRdu9G8zrvDKr748PGocaXBFr184J1S-ByX5eNbbtU1Mcux8-ffxqlb_DUKg7SqZj904uAOZ77tr2ie2RKFAsepTKEGWFFBUE3C3abqOmUALUdXt3w2RGqyoIU4t9aIAAAAAHMLobqAA" # <-- Apna naya wala valid string session yahan daalna
+STRING_SESSION = "1BVtsOJoBuz6O-ignkBVjmskExAXpT0jv6YRaRTKgvf41h4WAkG2Ais7U8iqbD6IC-MDxqhgRtBGasEHYKNt7WeRg52BXJ9pWnyYeHfOfIX0lQNq02jimrMUXqA9_8NIfltDyIxUt2gW7v-sFc-r2SJ3KRsw0fISL94A-tKlrBCxG8ba47cEJB7xMyDZsG27obcXv0rljWDrBZiHcYGwqqe9jAKR18C3yZuUZRsr_dJ_kr7WIVGiifkqQJgKit2okqK3tIbFXrD2xJ-cF5Fa0KQ1id98TtyHG03aNnvywoTMqGwObxrwmHwFvcWlOhnKApSRc8k50bZyqAf8-1offe3xSXAZKK3E="
 
 bot = Client("restricted_bot", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN)
 user = Client("user_session", api_id=API_ID, api_hash=API_HASH, session_string=STRING_SESSION)
@@ -43,10 +42,9 @@ IS_PROCESSING = False
 async def start(client, message):
     await message.reply_text(
         "👋 **Welcome to Bulk Save Restricted Bot!**\n\n"
-        "▶️ **Single Post:** Bas post ka link bhejein.\n"
         "▶️ **Bulk / Full Channel Clone:** Format:\n"
         "`/clone source_id target_id`\n\n"
-        "**Example:** `/clone -100123456789 -100987654321`"
+        "**Example:** `/clone -1003252713137 -1003819598497`"
     )
 
 @bot.on_message(filters.command("clone") & filters.private)
@@ -76,39 +74,42 @@ async def bulk_clone(client, message):
     success_count = 0
 
     try:
-        async with user:
-            async for msg in user.get_chat_history(source_chat, reverse=True):
-                if not IS_PROCESSING:
-                    break
-                if msg.empty:
-                    continue
+        # FIXED: Yahan se 'async with user:' hata diya hai kyunki client pehle se connected hai
+        async for msg in user.get_chat_history(source_chat, reverse=True):
+            if not IS_PROCESSING:
+                break
+            if msg.empty:
+                continue
 
-                try:
-                    if msg.text:
-                        await bot.send_message(chat_id=target_chat, text=msg.text, entities=msg.entities)
-                        success_count += 1
-                    elif msg.media:
-                        file_path = await user.download_media(msg)
-                        caption = msg.caption if msg.caption else ""
-                        caption_entities = msg.caption_entities if msg.caption_entities else None
+            try:
+                if msg.text:
+                    await bot.send_message(chat_id=target_chat, text=msg.text, entities=msg.entities)
+                    success_count += 1
+                elif msg.media:
+                    file_path = await user.download_media(msg)
+                    caption = msg.caption if msg.caption else ""
+                    caption_entities = msg.caption_entities if msg.caption_entities else None
 
-                        await bot.send_document(
-                            chat_id=target_chat,
-                            document=file_path,
-                            caption=caption,
-                            caption_entities=caption_entities
-                        )
-                        success_count += 1
-                        if os.path.exists(file_path):
-                            os.remove(file_path)
+                    await bot.send_document(
+                        chat_id=target_chat,
+                        document=file_path,
+                        caption=caption,
+                        caption_entities=caption_entities
+                    )
+                    success_count += 1
+                    if os.path.exists(file_path):
+                        os.remove(file_path)
 
+                # Har 5 message ke baad update dikhane ke liye taaki spam na ho
+                if success_count % 5 == 0:
                     await status.edit(f"▓ Progress: **{success_count}** posts forward ho chuki hain...")
-                    await asyncio.sleep(3) 
+                
+                await asyncio.sleep(2) 
 
-                except FloodWait as e:
-                    await asyncio.sleep(e.value)
-                except Exception as e:
-                    continue
+            except FloodWait as e:
+                await asyncio.sleep(e.value)
+            except Exception as e:
+                continue
 
         await status.edit(f"✅ **Bulk Forwarding Complete!** Total: {success_count}")
     except Exception as e:
@@ -128,4 +129,3 @@ if __name__ == "__main__":
         loop.run_until_complete(main())
     except KeyboardInterrupt:
         print("Bot stopped.")
-
